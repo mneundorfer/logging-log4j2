@@ -93,7 +93,7 @@ public class Rfc5424LayoutTest {
             root.removeAppender(appender);
         }
         // set up appender
-        final AbstractStringLayout layout = Rfc5424Layout.createLayout(Facility.LOCAL0, "Event", 3692, true, "RequestContext",
+        final AbstractStringLayout layout = Rfc5424Layout.createLayout(Facility.LOCAL0, "Event", "3692", true, "RequestContext",
             null, null, true, null, "ATM", null, "key1, key2, locale", null, "loginId", null, true, null, null);
         final ListAppender appender = new ListAppender("List", null, layout, true, false);
 
@@ -169,7 +169,7 @@ public class Rfc5424LayoutTest {
             root.removeAppender(appender);
         }
         // set up appender
-        final AbstractStringLayout layout = Rfc5424Layout.createLayout(Facility.LOCAL0, "Event", 3692, true, "RequestContext",
+        final AbstractStringLayout layout = Rfc5424Layout.createLayout(Facility.LOCAL0, "Event", "3692", true, "RequestContext",
                 null, null, true, null, "ATM", null, "key1, key2, locale", null, "loginId", null, true, null, null);
         final ListAppender appender = new ListAppender("List", null, layout, true, false);
 
@@ -240,7 +240,7 @@ public class Rfc5424LayoutTest {
             root.removeAppender(appender);
         }
         // set up layout/appender
-        final AbstractStringLayout layout = Rfc5424Layout.createLayout(Facility.LOCAL0, "Event", 3692, true, "RequestContext",
+        final AbstractStringLayout layout = Rfc5424Layout.createLayout(Facility.LOCAL0, "Event", "3692", true, "RequestContext",
             null, null, true, "#012", "ATM", null, "key1, key2, locale", null, "loginId", null, true, null, null);
         final ListAppender appender = new ListAppender("List", null, layout, true, false);
 
@@ -302,7 +302,7 @@ public class Rfc5424LayoutTest {
             root.removeAppender(appender);
         }
         // set up layout/appender
-        final AbstractStringLayout layout = Rfc5424Layout.createLayout(Facility.LOCAL0, "Event", 3692, true, "RequestContext",
+        final AbstractStringLayout layout = Rfc5424Layout.createLayout(Facility.LOCAL0, "Event", "3692", true, "RequestContext",
             null, null, true, null, "ATM", null, "key1, key2, locale", null, "loginId", "%xEx", true, null, null);
         final ListAppender appender = new ListAppender("List", null, layout, true, false);
         appender.start();
@@ -346,7 +346,7 @@ public class Rfc5424LayoutTest {
         };
 
         // set up layout/appender
-        final AbstractStringLayout layout = Rfc5424Layout.createLayout(Facility.LOCAL0, "Event", 3692, true, "RequestContext",
+        final AbstractStringLayout layout = Rfc5424Layout.createLayout(Facility.LOCAL0, "Event", "3692", true, "RequestContext",
             null, null, true, null, "ATM", null, "key1, key2, locale", null, null, null, true, loggerFields, null);
         final ListAppender appender = new ListAppender("List", null, layout, true, false);
         appender.start();
@@ -392,7 +392,7 @@ public class Rfc5424LayoutTest {
                 LoggerFields.createLoggerFields(new KeyValuePair[] { new KeyValuePair("bar", "%C.%M")}, null, null, false)
         };
 
-        final AbstractStringLayout layout = Rfc5424Layout.createLayout(Facility.LOCAL0, "Event", 3692, true, "RequestContext",
+        final AbstractStringLayout layout = Rfc5424Layout.createLayout(Facility.LOCAL0, "Event", "3692", true, "RequestContext",
                 null, null, true, null, "ATM", null, "key1, key2, locale", null, null, null, false, loggerFields, null);
         final ListAppender appender = new ListAppender("List", null, layout, true, false);
         appender.start();
@@ -439,7 +439,7 @@ public class Rfc5424LayoutTest {
                 LoggerFields.createLoggerFields(new KeyValuePair[] { new KeyValuePair("bar", "%C.%M")}, null, null, false)
         };
 
-        final AbstractStringLayout layout = Rfc5424Layout.createLayout(Facility.LOCAL0, "Event", 3692, true, mdcId,
+        final AbstractStringLayout layout = Rfc5424Layout.createLayout(Facility.LOCAL0, "Event", "3692", true, mdcId,
                 null, null, true, null, "ATM", null, "key1, key2, locale", null, null, null, false, loggerFields, null);
         final ListAppender appender = new ListAppender("List", null, layout, true, false);
         appender.start();
@@ -474,7 +474,7 @@ public class Rfc5424LayoutTest {
             root.removeAppender(appender);
         }
 
-        final AbstractStringLayout layout = Rfc5424Layout.createLayout(Facility.LOCAL0, "Event", 3692, false, mdcId,
+        final AbstractStringLayout layout = Rfc5424Layout.createLayout(Facility.LOCAL0, "Event", "3692", false, mdcId,
                 null, null, true, null, "ATM", "MSG-ID", "key1, key2, locale", null, null, null, false, null, null);
         final ListAppender appender = new ListAppender("List", null, layout, true, false);
         appender.start();
@@ -502,7 +502,7 @@ public class Rfc5424LayoutTest {
             root.removeAppender(appender);
         }
         // set up appender
-        final AbstractStringLayout layout = Rfc5424Layout.createLayout(Facility.LOCAL0, "Event", 3692, true, "RequestContext",
+        final AbstractStringLayout layout = Rfc5424Layout.createLayout(Facility.LOCAL0, "Event", "3692", true, "RequestContext",
             null, null, true, null, "ATM", null, "key1, key2, locale", null, null, null, true, null, null);
         final ListAppender appender = new ListAppender("List", null, layout, true, false);
 
