@@ -23,8 +23,6 @@ import static org.apache.log4j.xml.XmlConfiguration.LAYOUT_TAG;
 import static org.apache.log4j.xml.XmlConfiguration.PARAM_TAG;
 import static org.apache.log4j.xml.XmlConfiguration.forEachElement;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -70,7 +68,7 @@ public class ConsoleAppenderBuilder extends AbstractBuilder implements AppenderB
         final String name = getNameAttribute(appenderElement);
         final AtomicReference<String> target = new AtomicReference<>(SYSTEM_OUT);
         final AtomicReference<Layout> layout = new AtomicReference<>();
-        final AtomicReference<List<Filter>> filters = new AtomicReference<>(new ArrayList<>());
+        final AtomicReference<Filter> filter = new AtomicReference<>();
         final AtomicReference<String> level = new AtomicReference<>();
         final AtomicBoolean follow = new AtomicBoolean();
         final AtomicBoolean immediateFlush = new AtomicBoolean(true);
@@ -80,7 +78,7 @@ public class ConsoleAppenderBuilder extends AbstractBuilder implements AppenderB
                     layout.set(config.parseLayout(currentElement));
                     break;
                 case FILTER_TAG:
-                    filters.get().add(config.parseFilters(currentElement));
+                    config.addFilter(filter, currentElement);
                     break;
                 case PARAM_TAG: {
                     switch (getNameAttributeKey(currentElement)) {
@@ -115,17 +113,7 @@ public class ConsoleAppenderBuilder extends AbstractBuilder implements AppenderB
                 }
             }
         });
-        Filter head = null;
-        Filter current = null;
-        for (final Filter f : filters.get()) {
-            if (head == null) {
-                head = f;
-            } else {
-                current.next = f;
-            }
-            current = f;
-        }
-        return createAppender(name, layout.get(), head, level.get(), target.get(), immediateFlush.get(), follow.get(), config);
+        return createAppender(name, layout.get(), filter.get(), level.get(), target.get(), immediateFlush.get(), follow.get(), config);
     }
 
     @Override
@@ -142,17 +130,12 @@ public class ConsoleAppenderBuilder extends AbstractBuilder implements AppenderB
 
     private <T extends Log4j1Configuration> Appender createAppender(final String name, final Layout layout, final Filter filter,
             final String level, final String target, final boolean immediateFlush, final boolean follow, final T configuration) {
-        org.apache.logging.log4j.core.Layout<?> consoleLayout = null;
+        org.apache.logging.log4j.core.Layout<?> consoleLayout = LayoutAdapter.adapt(layout);
 
-        if (layout instanceof LayoutWrapper) {
-            consoleLayout = ((LayoutWrapper) layout).getLayout();
-        } else if (layout != null) {
-            consoleLayout = new LayoutAdapter(layout);
-        }
         final org.apache.logging.log4j.core.Filter consoleFilter = buildFilters(level, filter);
         final ConsoleAppender.Target consoleTarget = SYSTEM_ERR.equals(target)
                 ? ConsoleAppender.Target.SYSTEM_ERR : ConsoleAppender.Target.SYSTEM_OUT;
-        return new AppenderWrapper(ConsoleAppender.newBuilder()
+        return AppenderWrapper.adapt(ConsoleAppender.newBuilder()
                 .setName(name)
                 .setTarget(consoleTarget)
                 .setFollow(follow)

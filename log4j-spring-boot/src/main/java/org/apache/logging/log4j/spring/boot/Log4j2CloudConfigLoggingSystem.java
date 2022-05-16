@@ -27,6 +27,7 @@ import java.net.URLConnection;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import javax.net.ssl.HttpsURLConnection;
@@ -39,17 +40,24 @@ import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.ConfigurationFactory;
 import org.apache.logging.log4j.core.config.ConfigurationSource;
 import org.apache.logging.log4j.core.config.composite.CompositeConfiguration;
-import org.apache.logging.log4j.core.net.ssl.LaxHostnameVerifier;
+import org.apache.logging.log4j.core.net.UrlConnectionFactory;
 import org.apache.logging.log4j.core.net.ssl.SslConfiguration;
 import org.apache.logging.log4j.core.net.ssl.SslConfigurationFactory;
 import org.apache.logging.log4j.core.util.AuthorizationProvider;
 import org.apache.logging.log4j.core.util.FileUtils;
+import org.apache.logging.log4j.internal.LogManagerStatus;
 import org.apache.logging.log4j.status.StatusLogger;
 import org.apache.logging.log4j.util.PropertiesUtil;
 import org.apache.logging.log4j.util.Strings;
+import org.springframework.boot.context.properties.bind.BindResult;
+import org.springframework.boot.context.properties.bind.Bindable;
+import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.boot.logging.LogFile;
 import org.springframework.boot.logging.LoggingInitializationContext;
+import org.springframework.boot.logging.LoggingSystem;
+import org.springframework.boot.logging.LoggingSystemFactory;
 import org.springframework.boot.logging.log4j2.Log4J2LoggingSystem;
+import org.springframework.core.annotation.Order;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ResourceUtils;
@@ -58,10 +66,17 @@ import org.springframework.util.ResourceUtils;
  * Override Spring's implementation of the Log4j 2 Logging System to properly support Spring Cloud Config.
  */
 public class Log4j2CloudConfigLoggingSystem extends Log4J2LoggingSystem {
-    private static final String HTTPS = "https";
+
+    /**
+     * Property that disables the usage of this {@link LoggingSystem}.
+     */
+    public static final String LOG4J2_DISABLE_CLOUD_CONFIG_LOGGING_SYSTEM = "log4j2.disableCloudConfigLoggingSystem";
+
     public static final String ENVIRONMENT_KEY = "SpringEnvironment";
+    private static final String HTTPS = "https";
     private static final String OVERRIDE_PARAM = "override";
     private static Logger LOGGER = StatusLogger.getLogger();
+    private static final int PRECEDENCE = 0;
 
     public Log4j2CloudConfigLoggingSystem(ClassLoader loader) {
         super(loader);
@@ -111,13 +126,35 @@ public class Log4j2CloudConfigLoggingSystem extends Log4J2LoggingSystem {
         return defaultPath;
     }
 
+    /**
+     * This method is removed from Spring in 3.x and is scheduled to be removed in 2.8.x. It must be left in
+     * to support older Spring releases.
+     * @param location the location
+     * @param logFile log file configuration
+     */
     @Override
     protected void loadConfiguration(String location, LogFile logFile) {
+        loadConfiguration(location, logFile, Collections.emptyList());
+    }
+
+    /**
+     * Added in Spring 2.6.0, the overrides parameter allows override files to be specified in the
+     * "logging.log4j2.config.override" property. However, spring does not support passing credentials
+     * when accessing the location. We do.
+     * @param location The location of the primary configuration.
+     * @param logFile log file configuration.
+     * @param overrides Any override files.
+     */
+    @Override
+    protected void loadConfiguration(String location, LogFile logFile, List<String> overrides) {
         Assert.notNull(location, "Location must not be null");
         try {
             LoggerContext ctx = getLoggerContext();
-            String[] locations = parseConfigLocations(location);
-            if (locations.length == 1) {
+            List<String> locations = parseConfigLocations(location);
+            if (overrides != null) {
+                locations.addAll(overrides);
+            }
+            if (locations.size() == 1) {
                 final URL url = ResourceUtils.getURL(location);
                 final ConfigurationSource source = getConfigurationSource(url);
                 if (source != null) {
@@ -125,17 +162,27 @@ public class Log4j2CloudConfigLoggingSystem extends Log4J2LoggingSystem {
                 }
             } else {
                 final List<AbstractConfiguration> configs = new ArrayList<>();
+                boolean first = true;
                 for (final String sourceLocation : locations) {
                     final ConfigurationSource source = getConfigurationSource(ResourceUtils.getURL(sourceLocation));
                     if (source != null) {
-                        final Configuration config = ConfigurationFactory.getInstance().getConfiguration(ctx, source);
-                        if (config instanceof AbstractConfiguration) {
-                            configs.add((AbstractConfiguration) config);
-                        } else {
-                            LOGGER.warn("Configuration at {} cannot be combined in a CompositeConfiguration", sourceLocation);
-                            return;
+                        try {
+                            final Configuration config = ConfigurationFactory.getInstance().getConfiguration(ctx, source);
+                            if (config instanceof AbstractConfiguration) {
+                                configs.add((AbstractConfiguration) config);
+                            } else {
+                                LOGGER.warn("Configuration at {} cannot be combined in a CompositeConfiguration", sourceLocation);
+                                return;
+                            }
+                        } catch (Exception ex) {
+                            if (!first) {
+                                LOGGER.warn("Error accessing {}: {}. Ignoring override", sourceLocation, ex.getMessage());
+                            } else {
+                                throw ex;
+                            }
                         }
                     }
+                    first = false;
                 }
                 if (configs.size() > 1) {
                     ctx.start(new CompositeConfiguration(configs));
@@ -146,7 +193,7 @@ public class Log4j2CloudConfigLoggingSystem extends Log4J2LoggingSystem {
         }
         catch (Exception ex) {
             throw new IllegalStateException(
-                "Could not initialize Log4J2 logging from " + location, ex);
+                    "Could not initialize Log4J2 logging from " + location, ex);
         }
     }
 
@@ -156,11 +203,11 @@ public class Log4j2CloudConfigLoggingSystem extends Log4J2LoggingSystem {
         super.cleanUp();
     }
 
-    private String[] parseConfigLocations(String configLocations) {
+    private List<String> parseConfigLocations(String configLocations) {
         final String[] uris = configLocations.split("\\?");
         final List<String> locations = new ArrayList<>();
+        locations.add(uris[0]);
         if (uris.length > 1) {
-            locations.add(uris[0]);
             try {
                 final URL url = new URL(configLocations);
                 final String[] pairs = url.getQuery().split("&");
@@ -175,27 +222,21 @@ public class Log4j2CloudConfigLoggingSystem extends Log4J2LoggingSystem {
                         LOGGER.warn("Bad data in configuration string: {}", pair);
                     }
                 }
-                return locations.toArray(Strings.EMPTY_ARRAY);
+                return locations;
             } catch (MalformedURLException ex) {
                 LOGGER.warn("Unable to parse configuration URL {}", configLocations);
             }
         }
-        return new String[] {uris[0]};
+        return locations;
     }
 
     private ConfigurationSource getConfigurationSource(URL url) throws IOException, URISyntaxException {
-        URLConnection urlConnection = url.openConnection();
         AuthorizationProvider provider = ConfigurationFactory.authorizationProvider(PropertiesUtil.getProperties());
-        provider.addAuthorization(urlConnection);
-        if (url.getProtocol().equals(HTTPS)) {
-            SslConfiguration sslConfiguration = SslConfigurationFactory.getSslConfiguration();
-            if (sslConfiguration != null) {
-                ((HttpsURLConnection) urlConnection).setSSLSocketFactory(sslConfiguration.getSslSocketFactory());
-                if (!sslConfiguration.isVerifyHostName()) {
-                    ((HttpsURLConnection) urlConnection).setHostnameVerifier(LaxHostnameVerifier.INSTANCE);
-                }
-            }
-        }
+        SslConfiguration sslConfiguration = url.getProtocol().equals(HTTPS)
+                ? SslConfigurationFactory.getSslConfiguration() : null;
+        URLConnection urlConnection = UrlConnectionFactory.createConnection(url, 0, sslConfiguration,
+                provider);
+
         File file = FileUtils.fileFromUri(url.toURI());
         try {
             if (file != null) {
@@ -211,4 +252,18 @@ public class Log4j2CloudConfigLoggingSystem extends Log4J2LoggingSystem {
     private LoggerContext getLoggerContext() {
         return (LoggerContext) LogManager.getContext(false);
     }
+
+    @Order(PRECEDENCE)
+    public static class Factory implements LoggingSystemFactory {
+
+        @Override
+        public LoggingSystem getLoggingSystem(ClassLoader classLoader) {
+            if (PropertiesUtil.getProperties().getBooleanProperty(LOG4J2_DISABLE_CLOUD_CONFIG_LOGGING_SYSTEM)) {
+                return null;
+            }
+            return new Log4j2CloudConfigLoggingSystem(classLoader);
+        }
+
+    }
+
 }

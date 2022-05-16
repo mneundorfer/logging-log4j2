@@ -16,12 +16,18 @@
  */
 package org.apache.logging.log4j.osgi.tests;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.logging.log4j.osgi.tests.junit.BundleTestInfo;
 import org.apache.logging.log4j.osgi.tests.junit.OsgiRule;
@@ -85,6 +91,12 @@ public abstract class AbstractLoadBundleTest {
         return bundleContext.installBundle(apiPath.toUri().toString());
     }
 
+    private Bundle getApiTestsBundle() throws BundleException {
+      final Path apiTestsPath = here.resolveSibling("log4j-api")
+          .resolve("target")
+          .resolve("log4j-api-" + bundleTestInfo.getVersion() + "-tests.jar");
+        return bundleContext.installBundle(apiTestsPath.toUri().toString());
+    }
 
     protected abstract FrameworkFactory getFactory();
 
@@ -316,4 +328,36 @@ public abstract class AbstractLoadBundleTest {
         uninstall(api, core, compat);
     }
 
+    /**
+     * Tests whether the {@link ServiceLoaderUtil} finds services in other bundles.
+     * 
+     * @throws BundleException
+     * @throws ReflectiveOperationException
+     */
+    @Test
+    public void testServiceLoader() throws BundleException, ReflectiveOperationException {
+        final Bundle api = getApiBundle();
+        final Bundle core = getCoreBundle();
+        final Bundle apiTests = getApiTestsBundle();
+
+        api.start();
+        core.start();
+        assertEquals("api-tests is not in RESOLVED state", Bundle.RESOLVED, apiTests.getState());
+
+        final Class<?> osgiServiceLocatorTest = api.loadClass("org.apache.logging.log4j.util.OsgiServiceLocatorTest");
+
+        final Method loadProviders = osgiServiceLocatorTest.getDeclaredMethod("loadProviders");
+        Object obj = loadProviders.invoke(null);
+        assertTrue(obj instanceof Stream);
+        @SuppressWarnings("unchecked")
+        List<Object> services = ((Stream<Object>) obj).collect(Collectors.toList());
+        assertEquals(1, services.size());
+        assertEquals("org.apache.logging.log4j.core.impl.Log4jProvider", services.get(0).getClass().getName());
+
+        core.stop();
+        api.stop();
+        assertEquals("api-tests is not in ACTIVE state", Bundle.RESOLVED, apiTests.getState());
+        uninstall(apiTests, api, core);
+        assertEquals("api-tests is not in ACTIVE state", Bundle.UNINSTALLED, apiTests.getState());
+    }
 }

@@ -94,8 +94,8 @@ public class LogManager {
                         try {
                             factories.put(provider.getPriority(), factoryClass.newInstance());
                         } catch (final Exception e) {
-                            LOGGER.error("Unable to create class {} specified in provider URL {}", factoryClass.getName(), provider
-                                    .getUrl(), e);
+                            LOGGER.error("Unable to create class {} specified in provider URL {}",
+                                    factoryClass.getName(), provider.getUrl(), e);
                         }
                     }
                 }
@@ -122,8 +122,8 @@ public class LogManager {
                         + "Please add log4j-core to the classpath. Using SimpleLogger to log to the console...");
                 factory = SimpleLoggerContextFactory.INSTANCE;
             }
-            LogManagerStatus.setInitialized(true);
         }
+        LogManagerStatus.setInitialized(true);
     }
 
     /**
@@ -351,7 +351,7 @@ public class LogManager {
      * @return a LoggerContext.
      */
     protected static LoggerContext getContext(final String fqcn, final ClassLoader loader,
-                                              final boolean currentContext, final URI configLocation, final String name) {
+                                          final boolean currentContext, final URI configLocation, final String name) {
         try {
             return factory.getContext(fqcn, loader, null, currentContext, configLocation, name);
         } catch (final IllegalStateException ex) {

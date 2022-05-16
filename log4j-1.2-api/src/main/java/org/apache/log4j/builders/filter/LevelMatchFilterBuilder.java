@@ -26,6 +26,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.apache.log4j.bridge.FilterWrapper;
 import org.apache.log4j.builders.AbstractBuilder;
 import org.apache.log4j.config.PropertiesConfiguration;
+import org.apache.log4j.helpers.OptionConverter;
 import org.apache.log4j.spi.Filter;
 import org.apache.log4j.xml.XmlConfiguration;
 import org.apache.logging.log4j.Level;
@@ -37,7 +38,7 @@ import org.w3c.dom.Element;
  * Build a Level match failter.
  */
 @Plugin(name = "org.apache.log4j.varia.LevelMatchFilter", category = CATEGORY)
-public class LevelMatchFilterBuilder extends AbstractBuilder implements FilterBuilder {
+public class LevelMatchFilterBuilder extends AbstractBuilder<Filter> implements FilterBuilder {
 
     private static final String LEVEL = "LevelToMatch";
     private static final String ACCEPT_ON_MATCH = "AcceptOnMatch";
@@ -50,7 +51,7 @@ public class LevelMatchFilterBuilder extends AbstractBuilder implements FilterBu
     }
 
     @Override
-    public Filter parseFilter(Element filterElement, XmlConfiguration config) {
+    public Filter parse(Element filterElement, XmlConfiguration config) {
         final AtomicReference<String> level = new AtomicReference<>();
         final AtomicBoolean acceptOnMatch = new AtomicBoolean();
         forEachElement(filterElement.getElementsByTagName("param"), currentElement -> {
@@ -60,7 +61,7 @@ public class LevelMatchFilterBuilder extends AbstractBuilder implements FilterBu
                         level.set(getValueAttribute(currentElement));
                         break;
                     case ACCEPT_ON_MATCH:
-                        acceptOnMatch.set(Boolean.parseBoolean(getValueAttribute(currentElement)));
+                        acceptOnMatch.set(getBooleanValueAttribute(currentElement));
                         break;
                 }
             }
@@ -69,7 +70,7 @@ public class LevelMatchFilterBuilder extends AbstractBuilder implements FilterBu
     }
 
     @Override
-    public Filter parseFilter(PropertiesConfiguration config) {
+    public Filter parse(PropertiesConfiguration config) {
         String level = getProperty(LEVEL);
         boolean acceptOnMatch = getBooleanProperty(ACCEPT_ON_MATCH);
         return createFilter(level, acceptOnMatch);
@@ -78,12 +79,12 @@ public class LevelMatchFilterBuilder extends AbstractBuilder implements FilterBu
     private Filter createFilter(String level, boolean acceptOnMatch) {
         Level lvl = Level.ERROR;
         if (level != null) {
-            lvl = Level.toLevel(level, Level.ERROR);
+            lvl = OptionConverter.toLevel(level, org.apache.log4j.Level.ERROR).getVersion2Level();
         }
         org.apache.logging.log4j.core.Filter.Result onMatch = acceptOnMatch
                 ? org.apache.logging.log4j.core.Filter.Result.ACCEPT
                 : org.apache.logging.log4j.core.Filter.Result.DENY;
-        return new FilterWrapper(LevelMatchFilter.newBuilder()
+        return FilterWrapper.adapt(LevelMatchFilter.newBuilder()
                 .setLevel(lvl)
                 .setOnMatch(onMatch)
                 .setOnMismatch(org.apache.logging.log4j.core.Filter.Result.NEUTRAL)

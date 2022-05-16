@@ -33,17 +33,17 @@ import org.w3c.dom.Element;
 public class SimpleLayoutBuilder implements LayoutBuilder {
 
     @Override
-    public Layout parseLayout(Element layoutElement, XmlConfiguration config) {
+    public Layout parse(Element layoutElement, XmlConfiguration config) {
         return new LayoutWrapper(PatternLayout.newBuilder()
-                .withPattern("%level - %m%n")
+                .withPattern("%v1Level - %m%n")
                 .withConfiguration(config)
                 .build());
     }
 
     @Override
-    public Layout parseLayout(PropertiesConfiguration config) {
+    public Layout parse(PropertiesConfiguration config) {
         return new LayoutWrapper(PatternLayout.newBuilder()
-                .withPattern("%level - %m%n")
+                .withPattern("%v1Level - %m%n")
                 .withConfiguration(config)
                 .build());
     }

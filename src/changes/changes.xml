@@ -29,10 +29,124 @@
          - "update" - Change
          - "remove" - Removed
     -->
-    <release version="2.17.2" date="20YY-MM-DD" description="GA Release 2.17.2">
+    <release version="2.18.0" date="2022-TBD" description="GA Release 2.18.0">
       <!-- FIXES -->
+      <action issue="LOG4J2-1376" dev="mneundorfer" type="fix">
+        Allow enterprise id to be an OID fragment.
+      </action>
+      <action issue="LOG4J2-3506" dev="rgoers" type="update">
+        Support Spring 2.6.x.
+      </action>
+      <action issue="LOG4J2-3493" dev="rgoers" type="fix" due-to="Dmytro Voloshyn">
+        ClassArbiter's newBuilder method referenced the wrong class.
+     </action>
+      <action issue="LOG4J2-3481" dev="rgoers" type="fix">
+        HttpWatcher did not pass credentials when polling.
+      </action>
+      <action issue="LOG4J2-3482" dev="rgoers" type="fix">
+        UrlConnectionFactory.createConnection now accepts an AuthorizationProvider as a parameter.
+      </action>
+      <action issue="LOG4J2-3495" dev="rgoers" type="fix">
+        Add MutableThreadContextMapFilter.
+      </action>
+      <action issue="LOG4J2-3473" dev="rpopma" type="update">
+        Make the default disruptor WaitStrategy used by Async Loggers garbage-free.
+      </action>
+      <action issue="LOG4J2-3472" dev="rpopma" type="add">
+        Add support for custom LMAX disruptor WaitStrategy configuration.
+      </action>
+      <action issue="LOG4J2-3476" dev="rpopma" type="update">
+        Do not throw UnsupportedOperationException when JUL ApiLogger::setLevel is called.
+      </action>
+      <action issue="LOG4J2-3477" dev="vy" type="fix" due-to="filipc">
+        Add the missing context stack to JsonLayout template.
+      </action>
+      <action issue="LOG4J2-3393" dev="vy" type="fix">
+        Improve JsonTemplateLayout performance.
+      </action>
+      <action issue="LOG4J2-3424" dev="ckozak" type="fix">
+        Properties defined in configuration using a value attribute (as opposed to element) are read correctly.
+      </action>
+      <action issue="LOG4J2-3413" date="2022-02-26" type="fix" due-to="Piotr Karwasz">
+        Fix resolution of non-Log4j properties.
+      </action>
+      <action issue="LOG4J2-3423" type="fix" due-to="Radim Tlusty, Gary Gregory">
+        JAR file containing Log4j configuration isn't closed.
+      </action>
+      <action issue="LOG4J2-3425" type="fix" due-to="Jiří Smolík, Gary Gregory">
+        Syslog appender lacks the SocketOptions setting.
+      </action>
+      <action type="fix" dev="pkarwasz">
+        Improve validation and reporting of configuration errors.
+      </action>
+      <action type="fix" dev="pkarwasz">
+        Log4j 1.2 bridge should generate Log4j 2.x messages based on the parameter runtime type.
+      </action>
+      <action issue="LOG4J2-3426" dev="pkarwasz" type="fix" due-to="Pooja Pandey, Piotr P. Karwasz">
+        Log4j 1.2 bridge should not wrap components unnecessarily.
+      </action>
+      <action issue="LOG4J2-3427" dev="pkarwasz" type="update">
+        Improves ServiceLoader support on servlet containers.
+      </action>
+      <action issue="LOG4J2-3418" dev="pkarwasz" type="fix">
+        Fixes Spring Boot logging system registration in a multi-application environment.
+      </action>
+      <action issue="LOG4J2-3040" dev="ggregory" type="fix" due-to="LF-Lin">
+        Avoid ClassCastException in JeroMqManager with custom LoggerContextFactory #791.
+      </action>
+      <action dev="ggregory" type="fix" due-to="LF-Lin">
+        Fix minor typo #792.
+      </action>
+      <action issue="LOG4J2-3419" dev="pkarwasz" type="add">
+        Add support for custom Log4j 1.x levels.
+      </action>
+      <action issue="LOG4J2-3439" dev="pkarwasz" type="fix" due-to="Jayesh Netravali, Piotr P. Karwasz">
+        Fixes default SslConfiguration, when a custom keystore is used.
+      </action>
+      <action issue="LOG4J2-3447" dev="pkarwasz" type="fix" due-to="Pooja Pandey">
+        Fixes appender concurrency problems in Log4j 1.x bridge.
+      </action>
+      <action issue="LOG4J2-3452" dev="stefanvodita" type="fix" due-to="Stefan Vodita">
+        Fix and test for race condition in FileUtils.mkdir().
+      </action>
+      <action issue="LOG4J2-3458" dev="ggregory" type="fix" due-to="Gary Gregory">
+        LocalizedMessage logs misleading errors on the console.
+      </action>
+      <action issue="LOG4J2-3359" dev="pkarwasz" type="fix" due-to="Tukesh, Piotr P. Karwasz">
+        Fixes the syslog appender in Log4j 1.x bridge, when used with a custom layout.
+      </action>
+      <action issue="LOG4J2-3359" dev="ggregory" type="fix" due-to="Rajesh, Gary Gregory">
+        log4j-1.2-api 2.17.2 throws NullPointerException while removing appender with name as null.
+      </action>
+      <action issue="LOG4J2-2872" dev="pkarwasz" type="fix" due-to="Alla Gofman, Piotr P. Karwasz">
+        Fix problem with non-uppercase custom levels.
+      </action>
+      <action issue="LOG4J2-3440" dev="pkarwasz" type="add">
+        Add support for adding and retrieving appenders in Log4j 1.x bridge.
+      </action>
+      <action issue="LOG4J2-3475" dev="jjlin" type="fix" due-to="Jeremy Lin">
+        Add missing message parameterization in RegexFilter.
+      </action>
+      <action issue="LOG4J2-3362" dev="pkarwasz" type="add">
+        Add support for Jakarta Mail API in the SMTP appender.
+      </action>
+      <action issue="LOG4J2-3428" dev="ggregory" type="fix" due-to="LF-Lin">
+        Update 3rd party dependencies for 2.18.0.
+      </action>
+    </release>
+    <release version="2.17.2" date="2022-02-23" description="GA Release 2.17.2">
+      <!-- FIXES -->
+      <action issue="LOG4J2-3304" dev="rgoers" type="fix" due-to="francis-FY">
+        Flag LogManager as initialized if the LoggerFactory is provided as a property.
+      </action>
+      <action issue="LOG4J2-3404" dev="ckozak" type="fix" due-to="Piotr P. Karwasz">
+        Fix DefaultConfiguration leak in PatternLayout
+      </action>
+      <action issue="LOG4J2-3405" dev="rgoers" type="fix">
+        Document that the Spring Boot Lookup requires the log4j-spring-boot dependency.
+      </action>
       <action issue="LOG4J2-3317" dev="ckozak" type="fix">
-        Fix RoutingAppender backcompat and disallow recursive evaluation of lookup results outside of configuration properties.
+        Fix RoutingAppender backward compatibility and disallow recursive evaluation of lookup results outside of configuration properties.
       </action>
       <action issue="LOG4J2-3333" dev="ckozak" type="fix">
         Fix ThreadContextDataInjector initialization deadlock
@@ -196,6 +310,12 @@
       <action dev="ggregory" type="fix" due-to="Gary Gregory">
         Log4j 1.2 bridge missing PatternParser.
       </action>
+      <action dev="ggregory" type="fix" due-to="Piotr P. Karwasz, Gary Gregory">
+        Log4j 1.2 bridge issues with filters #753.
+      </action>
+      <action dev="ggregory" type="fix" due-to="Gary Gregory">
+        Log4j 1.2 bridge implements most of DOMConfigurator.
+      </action>
       <action dev="ggregory" type="fix">
         JndiManager reverts to 2.17.0 behavior: Read the system property for each call.
       </action>
@@ -214,7 +334,22 @@
       <action issue="LOG4J2-3392" dev="ggregory" type="fix" due-to="Gary Gregory">
         Possible NullPointerException in MongoDb4DocumentObject, MongoDbDocumentObject, DefaultNoSqlObject.
       </action>
+      <action dev="ggregory" type="fix" due-to="Gary Gregory">
+        Trim whitespace before parsing a String into an Integer.
+      </action>
+      <action issue="LOG4J2-3410" dev="ggregory" type="fix" due-to="Barry Sham, Gary Gregory">
+        Log4j 1.2 bridge throws a ClassCastException when logging a Map with non-String keys.
+      </action>
+      <action issue="LOG4J2-3407" dev="ggregory" type="fix" due-to="Kenny MacLeod">
+        Log4j 1.2 bridge Check for non-existent appender when parsing properties #761.
+      </action>
+      <action issue="LOG4J2-3407" dev="ggregory" type="fix" due-to="Piotr P. Karwasz">
+        Log4j 1.2 bridge supports global threshold #764.
+      </action>
       <!-- ADD -->
+      <action issue="LOG4J2-3297" dev="rgoers" type="add">
+        Limit loading of configuration via a url to https by default.
+      </action>
       <action issue="LOG4J2-2486" dev="rgoers" type="add">
         Require log4j2.Script.enableLanguages to be specified to enable scripting for specific languages.
       </action>
@@ -230,8 +365,8 @@
       <action type="add" dev="ggregory" due-to="Gary Gregory">
         Add Configurator.setLevel(Logger, Level), setLevel(String, String), and setLevel(Class, Level).
       </action>
-      <action type="add" dev="mattsicker" issue="LOG4J2-3341">
-        Add shorthand syntax for properties configuration format for specifying a logger level and appender refs and implicit appender names for when no name is specified.
+      <action type="add" dev="rgoers" issue="LOG4J2-3341">
+        Add shorthand syntax for properties configuration format for specifying a logger level and appender refs.
       </action>
       <action issue="LOG4J2-3391" type="add" dev="ggregory" due-to="Gary Gregory">
         Add optional additional fields to NoSQLAppender.
@@ -259,7 +394,7 @@
         Bump org.springframework:spring-* from 5.3.13 to 5.3.15.
       </action>
       <action dev="ggregory" type="udpate" due-to="Gary Gregory">
-        Bump de.flapdoodle.embed:de.flapdoodle.embed.mongo from 3.0.0 to 3.2.6. Update tests for binary incompatibilities in APIs.
+        Bump de.flapdoodle.embed:de.flapdoodle.embed.mongo from 3.0.0 to 3.4.1. Update tests for binary incompatibilities in APIs.
       </action>
       <action dev="ggregory" type="udpate" due-to="Gary Gregory">
         Bump org.fusesource.jansi:jansi from 2.3.4 to 2.4.0.
@@ -277,19 +412,31 @@
         Bump org.codehaus.groovy:groovy-* from 3.0.8 to 3.0.9.
       </action>
       <action dev="ggregory" type="udpate" due-to="Gary Gregory">
-        Bump org.mongodb:bson from 4.2.2 to 4.4.1.
+        Bump org.mongodb:bson from 4.2.2 to 4.5.0.
       </action>
       <action dev="ggregory" type="udpate" due-to="Gary Gregory">
-        Bump org.mongodb:mongodb-driver-sync from 4.2.2 to 4.4.1.
-      </action>
-      <action dev="ggregory" type="udpate" due-to="Gary Gregory">
-        Bump de.flapdoodle.embed:de.flapdoodle.embed.mongo from 3.2.6 to 3.2.8.
+        Bump org.mongodb:mongodb-driver-sync from 4.2.2 to 4.5.0.
       </action>
       <action dev="ggregory" type="udpate" due-to="Gary Gregory">
         Bump Woodstox 6.2.6 to 6.2.8.
       </action>
       <action dev="ggregory" type="udpate" due-to="Gary Gregory">
         Bump maven-compiler-plugin from 3.8.1 to 3.9.0.
+      </action>
+      <action dev="ggregory" type="udpate" due-to="Gary Gregory">
+        Bump org.eclipse.persistence:org.eclipse.persistence.jpa from 2.7.9 to 2.7.10.
+      </action>
+      <action dev="ggregory" type="udpate" due-to="Gary Gregory">
+        Bump org.junit-pioneer:junit-pioneer from 1.5.0 to 1.6.1.
+      </action>
+      <action dev="ggregory" type="udpate" due-to="Gary Gregory">
+        Bump org.apache.activemq:activemq-broker from 5.16.3 to 5.16.4.
+      </action>
+      <action dev="ggregory" type="udpate" due-to="Gary Gregory">
+        Bump org.jacoco:jacoco-maven-plugin from 0.8.6 to 0.8.7.
+      </action>
+      <action dev="ggregory" type="udpate" due-to="Gary Gregory">
+        Bump org.apache.maven.plugins:maven-javadoc-plugin from 3.3.1 to 3.3.2.
       </action>
 	</release>
     <release version="2.17.1" date="2021-12-27" description="GA Release 2.17.1">

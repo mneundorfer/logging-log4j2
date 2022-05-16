@@ -23,6 +23,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.appender.SmtpAppender;
 import org.apache.logging.log4j.core.async.RingBufferLogEvent;
 import org.apache.logging.log4j.core.impl.Log4jLogEvent;
 import org.apache.logging.log4j.core.impl.MementoMessage;
@@ -33,20 +34,36 @@ import org.apache.logging.log4j.message.ReusableMessage;
 import org.apache.logging.log4j.message.ReusableSimpleMessage;
 import org.junit.jupiter.api.Test;
 
-/**
- * Unit tests for {@link SmtpManager}.
- */
 public class SmtpManagerTest {
 
     @Test
-    void testCreateManagerName() {
+    public void testCreateManagerName() {
         String managerName = SmtpManager.createManagerName("to", "cc", null, "from", null, "LOG4J2-3107",
                 "proto", "smtp.log4j.com", 4711, "username", false, "filter");
         assertEquals("SMTP:to:cc::from::LOG4J2-3107:proto:smtp.log4j.com:4711:username::filter", managerName);
     }
 
     private void testAdd(LogEvent event) {
-        SmtpManager smtpManager = SmtpManager.getSmtpManager(null, "to", "cc", "bcc", "from", "replyTo", "subject", "protocol", "host", 0, "username", "password", false, "filterName", 10, null);
+        final SmtpAppender appender = SmtpAppender.newBuilder()
+                .setName("smtp")
+                .setTo("to")
+                .setCc("cc")
+                .setBcc("bcc")
+                .setFrom("from")
+                .setReplyTo("replyTo")
+                .setSubject("subject")
+                .setSmtpProtocol("smtp")
+                .setSmtpHost("host")
+                .setSmtpPort(0)
+                .setSmtpUsername("username")
+                .setSmtpPassword("password")
+                .setSmtpDebug(false)
+                .setFilter(null)
+                .setBufferSize(10)
+                .build();
+        final MailManager mailManager = appender.getManager();
+        assertThat("is instance of SmtpManager", mailManager instanceof SmtpManager);
+        final SmtpManager smtpManager = (SmtpManager) mailManager;
         smtpManager.removeAllBufferedEvents(); // in case this smtpManager is reused
         smtpManager.add(event);
 
@@ -57,21 +74,21 @@ public class SmtpManagerTest {
 
     // LOG4J2-3172: make sure existing protections are not violated
     @Test
-    void testAdd_WhereLog4jLogEventWithReusableMessage() {
+    public void testAdd_WhereLog4jLogEventWithReusableMessage() {
         LogEvent event = new Log4jLogEvent.Builder().setMessage(getReusableMessage("test message")).build();
         testAdd(event);
     }
 
     // LOG4J2-3172: make sure existing protections are not violated
     @Test
-    void testAdd_WhereMutableLogEvent() {
+    public void testAdd_WhereMutableLogEvent() {
         MutableLogEvent event = new MutableLogEvent(new StringBuilder("test message"), null);
         testAdd(event);
     }
 
     // LOG4J2-3172
     @Test
-    void testAdd_WhereRingBufferLogEvent() {
+    public void testAdd_WhereRingBufferLogEvent() {
         RingBufferLogEvent event = new RingBufferLogEvent();
         event.setValues(null, null, null, null, null, getReusableMessage("test message"), null, null, null, 0, null, 0, null, ClockFactory.getClock(), new DummyNanoClock());
         testAdd(event);

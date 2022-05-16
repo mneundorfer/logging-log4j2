@@ -19,9 +19,7 @@ package org.apache.log4j.builders;
 import static org.apache.log4j.xml.XmlConfiguration.NAME_ATTR;
 import static org.apache.log4j.xml.XmlConfiguration.VALUE_ATTR;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -34,7 +32,6 @@ import org.apache.log4j.helpers.OptionConverter;
 import org.apache.log4j.spi.Filter;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.filter.CompositeFilter;
 import org.apache.logging.log4j.core.filter.ThresholdFilter;
 import org.apache.logging.log4j.status.StatusLogger;
 import org.apache.logging.log4j.util.Strings;
@@ -42,8 +39,10 @@ import org.w3c.dom.Element;
 
 /**
  * Base class for Log4j 1 component builders.
+ *
+ * @param <T> The type to build.
  */
-public abstract class AbstractBuilder implements Builder {
+public abstract class AbstractBuilder<T> implements Builder<T> {
 
     private static Logger LOGGER = StatusLogger.getLogger();
     protected static final String FILE_PARAM = "File";
@@ -74,32 +73,17 @@ public abstract class AbstractBuilder implements Builder {
         props.entrySet().forEach(e -> this.properties.put(toBeanKey(e.getKey().toString()), e.getValue()));
     }
 
-    protected org.apache.logging.log4j.core.Filter buildFilters(final String level, final Filter filter) {
-        if (level != null && filter != null) {
-            final List<org.apache.logging.log4j.core.Filter> filterList = new ArrayList<>();
+    protected static org.apache.logging.log4j.core.Filter buildFilters(final String level, final Filter filter) {
+        Filter head = null;
+        if (level != null) {
             final org.apache.logging.log4j.core.Filter thresholdFilter = ThresholdFilter.createFilter(OptionConverter.convertLevel(level, Level.TRACE),
                 org.apache.logging.log4j.core.Filter.Result.NEUTRAL, org.apache.logging.log4j.core.Filter.Result.DENY);
-            filterList.add(thresholdFilter);
-            Filter f = filter;
-            while (f != null) {
-                if (filter instanceof FilterWrapper) {
-                    filterList.add(((FilterWrapper) f).getFilter());
-                } else {
-                    filterList.add(new FilterAdapter(f));
-                }
-                f = f.getNext();
-            }
-            return CompositeFilter.createFilters(filterList.toArray(org.apache.logging.log4j.core.Filter.EMPTY_ARRAY));
-        } else if (level != null) {
-            return ThresholdFilter.createFilter(OptionConverter.convertLevel(level, Level.TRACE), org.apache.logging.log4j.core.Filter.Result.NEUTRAL,
-                org.apache.logging.log4j.core.Filter.Result.DENY);
-        } else if (filter != null) {
-            if (filter instanceof FilterWrapper) {
-                return ((FilterWrapper) filter).getFilter();
-            }
-            return new FilterAdapter(filter);
+            head = new FilterWrapper(thresholdFilter);
         }
-        return null;
+        if (filter != null) {
+            head = FilterAdapter.addFilter(head, filter);
+        }
+        return FilterAdapter.adapt(head);
     }
 
     private String capitalize(final String value) {
@@ -117,6 +101,10 @@ public abstract class AbstractBuilder implements Builder {
 
     public boolean getBooleanProperty(final String key) {
         return getBooleanProperty(key, false);
+    }
+
+    protected boolean getBooleanValueAttribute(final Element element) {
+        return Boolean.parseBoolean(getValueAttribute(element));
     }
 
     public int getIntegerProperty(final String key, final int defaultValue) {
@@ -152,7 +140,7 @@ public abstract class AbstractBuilder implements Builder {
         String value = properties.getProperty(prefix + toJavaKey(key));
         value = value != null ? value : properties.getProperty(prefix + toBeanKey(key), defaultValue);
         value = value != null ? substVars(value) : defaultValue;
-        return value != null ? value : defaultValue;
+        return value != null ? value.trim() : defaultValue;
     }
 
     protected String getValueAttribute(final Element element) {
@@ -161,7 +149,7 @@ public abstract class AbstractBuilder implements Builder {
 
     protected String getValueAttribute(final Element element, final String defaultValue) {
         final String attribute = element.getAttribute(VALUE_ATTR);
-        return substVars(attribute != null ? attribute : defaultValue);
+        return substVars(attribute != null ? attribute.trim() : defaultValue);
     }
 
     protected String substVars(final String value) {

@@ -37,7 +37,7 @@ import org.w3c.dom.Element;
  * Build a Pattern Layout
  */
 @Plugin(name = "org.apache.log4j.HTMLLayout", category = CATEGORY)
-public class HtmlLayoutBuilder extends AbstractBuilder implements LayoutBuilder {
+public class HtmlLayoutBuilder extends AbstractBuilder<Layout> implements LayoutBuilder {
 
     private static final String DEFAULT_TITLE = "Log4J Log Messages";
     private static final String TITLE_PARAM = "Title";
@@ -52,7 +52,7 @@ public class HtmlLayoutBuilder extends AbstractBuilder implements LayoutBuilder 
 
 
     @Override
-    public Layout parseLayout(Element layoutElement, XmlConfiguration config) {
+    public Layout parse(Element layoutElement, XmlConfiguration config) {
         final AtomicReference<String> title = new AtomicReference<>("Log4J Log Messages");
         final AtomicBoolean locationInfo = new AtomicBoolean();
         forEachElement(layoutElement.getElementsByTagName("param"), currentElement -> {
@@ -60,7 +60,7 @@ public class HtmlLayoutBuilder extends AbstractBuilder implements LayoutBuilder 
                 if (TITLE_PARAM.equalsIgnoreCase(currentElement.getAttribute("name"))) {
                     title.set(currentElement.getAttribute("value"));
                 } else if (LOCATION_INFO_PARAM.equalsIgnoreCase(currentElement.getAttribute("name"))) {
-                    locationInfo.set(Boolean.parseBoolean(currentElement.getAttribute("value")));
+                    locationInfo.set(getBooleanValueAttribute(currentElement));
                 }
             }
         });
@@ -68,14 +68,14 @@ public class HtmlLayoutBuilder extends AbstractBuilder implements LayoutBuilder 
     }
 
     @Override
-    public Layout parseLayout(PropertiesConfiguration config) {
+    public Layout parse(PropertiesConfiguration config) {
         String title = getProperty(TITLE_PARAM, DEFAULT_TITLE);
         boolean locationInfo = getBooleanProperty(LOCATION_INFO_PARAM);
         return createLayout(title, locationInfo);
     }
 
     private Layout createLayout(String title, boolean locationInfo) {
-        return new LayoutWrapper(HtmlLayout.newBuilder()
+        return LayoutWrapper.adapt(HtmlLayout.newBuilder()
                 .withTitle(title)
                 .withLocationInfo(locationInfo)
                 .build());
